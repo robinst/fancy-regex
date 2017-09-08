@@ -36,7 +36,7 @@ pub mod compile;
 pub mod vm;
 
 use parse::Parser;
-use analyze::Analysis;
+use analyze::analyze;
 use compile::compile;
 use vm::Prog;
 
@@ -129,9 +129,9 @@ impl Regex {
             ))
         ]);
 
-        let a = Analysis::analyze(&e, &backrefs)?;
+        let analyzed_expr = analyze(&e, &backrefs)?;
 
-        let inner_info = &a.infos[4];  // references inner expr
+        let inner_info = &analyzed_expr.children[1].children[0];  // references inner expr
         if !inner_info.hard {
             // easy case, wrap regex
 
@@ -163,10 +163,10 @@ impl Regex {
             });
         }
 
-        let p = try!(compile(&a));
+        let p = try!(compile(&analyzed_expr));
         Ok(Regex::Impl {
             prog: p,
-            n_groups: a.n_groups(),
+            n_groups: analyzed_expr.end_group,
             original: re.to_string(),
         })
     }
